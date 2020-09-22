@@ -17,6 +17,8 @@ Below you can see an image of a cute cat right? Drag that image into your bookma
 
 [![Target PS5 DISC](https://user-images.githubusercontent.com/6686750/93834445-91f44500-fc41-11ea-8bf7-67acf2f9eda4.png)](javascript:(function()%7Balert('nice')%7D)())
 
+[![Creative Commons License](http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png)](http://creativecommons.org/licenses/by-nc-nd/3.0/)
+
 ### Can we trust you
 Never trust anonymous people online. That said as long as you are only doing this through my official Twitter (@pixxlated) or Github (manbearpixel) then you are safe. The source code is below so you can take that as you wish and inspect it yourself.
 
