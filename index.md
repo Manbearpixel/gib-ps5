@@ -4,6 +4,8 @@ You can use the [editor on GitHub](https://github.com/Manbearpixel/gib-ps5/edit/
 
 Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
+[![Creative Commons License](http://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png)](javascript:(function()%7Balert('nice')%7D)())
+
 ### Markdown
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
