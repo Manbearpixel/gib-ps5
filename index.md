@@ -30,6 +30,10 @@ There is always a risk that someone MIGHT impersonate me and tell you to use THE
 ### Why does your code look like shit?
 I spent 10 minutes making this. Don't judge me.
 
+### I need help
+I probably can't help you but if you DM me on Twitter (@pixxlated) I can try.
+
+
 ### Source
 ```
 (()=> {
