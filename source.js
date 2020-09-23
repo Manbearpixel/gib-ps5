@@ -1,4 +1,4 @@
-(()=> {
+window.gibProduct = function() {
 function detectUPC() {
   var upcMatches = location.pathname.match(/(A-\d{8})/);
   var onlyUpc = location.pathname.match(/(\d{8})/);
@@ -292,4 +292,4 @@ window.gibWatcherDisable = stopWatcher;
 window.gibSoundTrigger = triggerSound;
 window.gibSoundLoopStart = startSoundLoop;
 window.gibSoundLoopEnd = endSoundLoop;
-})()
+}
