@@ -1,4 +1,4 @@
-window.gibProduct = function() {
+(function() {
 function detectUPC() {
   var upcMatches = location.pathname.match(/(A-\d{8})/);
   var onlyUpc = location.pathname.match(/(\d{8})/);
@@ -76,6 +76,8 @@ var gib = {
       if (window.gibSettings.alerts) {
         window.gibWatcherDisable();
         DEBUG_NODE.innerText = 'THIS PRODUCT IS IN YOUR CART!! CLICK CONTINUE!!';
+        document.getElementById('gib--continue').style.display = 'block';
+        document.getElementById('gib--settings').style.display = 'none';
         window.gibSoundLoopStart();
       } else {
         window.gibWatcherDisable(DEBUG_NODE);
@@ -85,7 +87,7 @@ var gib = {
   },
 
   createSettings: function(options) {
-    var list = this.createElement('ul');
+    var list = this.createElement('ul', 'gib--settings');
     for (var id in options) {
       var option = options[id];
       var optionWrapper = this.createElement('li', null, {
@@ -151,6 +153,19 @@ var title = gib.createElement('h1', 'gib--title', {
 });
 title.innerText = gib.PRODUCT_TITLE;
 wrapper.appendChild(title);
+
+var continueButton = gib.createElement('button', 'gib--continue', {
+  backgroundColor: '#fff',
+  padding: '10px 20px',
+  fontSize: '24px',
+  borderRadius: '4px',
+  display: 'none'
+});
+continueButton.innerText = 'CONTINUE';
+continueButton.onclick = function() {
+  window.location.replace('https://www.target.com/co-cart');
+};
+wrapper.appendChild(continueButton);
 
 var debug = gib.createElement('div', 'gib--debug', {
   fontSize: '20px',
@@ -292,4 +307,4 @@ window.gibWatcherDisable = stopWatcher;
 window.gibSoundTrigger = triggerSound;
 window.gibSoundLoopStart = startSoundLoop;
 window.gibSoundLoopEnd = endSoundLoop;
-}
+})()
