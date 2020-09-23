@@ -1,25 +1,28 @@
 # Class Mod: Order PS5
 
-### Bookmarker Current Version: 1.0.0
-Right now it is hard-coded to attempt to add the PHYSICAL DISC PS5 into your cart. It does not matter what page you're on when you click the bookmark SO LONG as you are at least on Target.com. If you are not on the website it will not work.
+### Bookmarker Current Version: 1.1.0
+**New Version!**
+
+##### Auto Detection
+Detects current product page you're on at Target.com and will configure itself to MONITOR that specific product! You can use this with PS5 Physical, Digital, Accessories, and Games! You can even monitor the pre-order for new toasters. If it can't detect the product page you're on it will let you know.
+
+##### Sound Alerts!
+You can now enable alerts! If the product is added to your cart it will loop a sound effect to get your attention instead of redirecting you to your target cart. You'll need to manually click "Continue" to head to the checkout process. If alerts are disabled, it will just redirect you to your cart. We can't have both worlds because the script is lost during a redirect.
 
 ### What does it do?
 If you click the bookmark while on Target.com you will see a mini window appear that says "Setting up". After 10 seconds one of two things will happen:
-  1) Your PS5 will be added to your cart and you'll be redirected to your cart to checkout;
+  1) The product on the page you're on will be added to your cart and a sound effect will loop to get your attention;
   2) The text will update to "Attempt failed #X"
 
-This will happen automatically every 10 seconds. Consider this a friendly helper in your quest to pre-order a PS5. It skips the whole mess of clicking a button or refreshing the page waiting for "Add to cart" to appear.
+This will happen automatically every 10 seconds. Consider this a friendly helper in your quest to pre-order your product. It skips the whole mess of clicking a button or refreshing the page waiting for "Add to cart" to appear.
 
 ### How does this work?
 With the magic of Javascript we can recreate what Target.com does when you try to add an item to your cart.
 
-Below you can see an image of a cute cat right? Drag that image into your bookmarks bar. Then navigate to Target.com or the [PS5 Product page](https://www.target.com/p/playstation-5-console/-/A-81114595). Finally, click the bookmark you just added to your bookmarks bar and you should see a red box appear that says "Setting Up"
+Below you can see an image of a cute cat right? Drag that image into your bookmarks bar. Then navigate to Target.com and click on any product you want to monitor (Like the [PS5 Product page](https://www.target.com/p/playstation-5-console/-/A-81114595)). Finally, click the bookmark you just added to your bookmarks bar and you should see a red box appear that says "Setting Up"
 
-#### Target PS5 DISC Bookmarklet
-[![Target PS5 DISC](https://user-images.githubusercontent.com/6686750/93834445-91f44500-fc41-11ea-8bf7-67acf2f9eda4.png)](javascript:(function()%7B(()%3D%3E%20%7Bvar%20node%20%3D%20document.createElement('div')%3Bnode.id%3D'boomer1'%3Bnode.style.backgroundColor%3D'red'%3Bnode.style.position%3D'fixed'%3Bnode.style.top%3D'0px'%3Bnode.style.height%3D'300px'%3Bnode.style.width%3D'300px'%3Bnode.style.display%3D'flex'%3Bnode.style.alignItems%3D'center'%3Bvar%20text%20%3D%20document.createElement('div')%3Btext.id%3D'boomer2'%3Btext.innerText%3D'DISC%20Setting%20up...'%3Btext.style.fontSize%3D'24px'%3Btext.style.color%3D'%23fff'%3Bnode.appendChild(text)%3Bdocument.body.appendChild(node)%3Bwindow.refreshSeconds%20%3D%2010%3Bwindow.boomerAttempts%20%3D%200%3Bfunction%20attemptAdd(textNode%2C%20upc)%20%7Bvar%20cartUrl%20%3D%20'https%3A%2F%2Fcarts.target.com%2Fweb_checkouts%2Fv1%2Fcart_items%3Ffield_groups%3DCART%252CCART_ITEMS%252CSUMMARY%26key%3Dfeaf228eb2777fd3eee0fd5192ae7107d6224b39'%3Bvar%20cart%20%3D%20%7B%22cart_type%22%3A%22REGULAR%22%2C%22channel_id%22%3A%2210%22%2C%22shopping_context%22%3A%22DIGITAL%22%2C%22cart_item%22%3A%7B%22tcin%22%3Aupc%2C%22quantity%22%3A1%2C%22item_channel_id%22%3A%2210%22%7D%2C%22fulfillment%22%3A%7B%22fulfillment_test_mode%22%3A%22grocery_opu_team_member_test%22%7D%7D%3BtextNode.innerText%20%3D%20'Attempting...'%3Bfetch(cartUrl%2C%20%7B%20method%3A%20'POST'%2C%20mode%3A%20'cors'%2C%20credentials%3A%20'include'%2C%20headers%3A%20%7B%20'Content-Type'%3A%20'application%2Fjson'%20%7D%2C%20body%3A%20JSON.stringify(cart)%20%7D).then(response%20%3D%3E%20%7Bif%20(response.status%20%3D%3D%20200%20%7C%7C%20response.status%20%3D%3D%20201)%20%7Breturn%20response%3B%7D%20else%20%7Bwindow.boomerAttempts%2B%2B%3BtextNode.innerText%20%3D%20'DISC%20Failed...%20Attempt%20%23'%20%2B%20window.boomerAttempts%3Breturn%20false%3B%7D%7D).then(response%20%3D%3E%20%7Bif%20(!response)%20return%3Bwindow.location.replace('https%3A%2F%2Fwww.target.com%2Fco-cart')%3B%7D)%3B%7DsetInterval(()%20%3D%3E%20%7Bvar%20PS5_UPC%20%3D%20'81114595'%3BattemptAdd(text%2C%20PS5_UPC)%3B%7D%2C%20window.refreshSeconds%20*%201000)%3B%7D)()%7D)())
-
-#### Target PS5 DIGITAL Bookmarklet
-[![Target PS5 DIGITAL](https://user-images.githubusercontent.com/6686750/93834445-91f44500-fc41-11ea-8bf7-67acf2f9eda4.png)](javascript:(function()%7B(()%3D%3E%20%7Bvar%20node%20%3D%20document.createElement('div')%3Bnode.id%3D'boomer1'%3Bnode.style.backgroundColor%3D'red'%3Bnode.style.position%3D'fixed'%3Bnode.style.top%3D'0px'%3Bnode.style.height%3D'300px'%3Bnode.style.width%3D'300px'%3Bnode.style.display%3D'flex'%3Bnode.style.alignItems%3D'center'%3Bvar%20text%20%3D%20document.createElement('div')%3Btext.id%3D'boomer2'%3Btext.innerText%3D'DIGITAL%20Setting%20up...'%3Btext.style.fontSize%3D'24px'%3Btext.style.color%3D'%23fff'%3Bnode.appendChild(text)%3Bdocument.body.appendChild(node)%3Bwindow.refreshSeconds%20%3D%2010%3Bwindow.boomerAttempts%20%3D%200%3Bfunction%20attemptAdd(textNode%2C%20upc)%20%7Bvar%20cartUrl%20%3D%20'https%3A%2F%2Fcarts.target.com%2Fweb_checkouts%2Fv1%2Fcart_items%3Ffield_groups%3DCART%252CCART_ITEMS%252CSUMMARY%26key%3Dfeaf228eb2777fd3eee0fd5192ae7107d6224b39'%3Bvar%20cart%20%3D%20%7B%22cart_type%22%3A%22REGULAR%22%2C%22channel_id%22%3A%2210%22%2C%22shopping_context%22%3A%22DIGITAL%22%2C%22cart_item%22%3A%7B%22tcin%22%3Aupc%2C%22quantity%22%3A1%2C%22item_channel_id%22%3A%2210%22%7D%2C%22fulfillment%22%3A%7B%22fulfillment_test_mode%22%3A%22grocery_opu_team_member_test%22%7D%7D%3BtextNode.innerText%20%3D%20'Attempting...'%3Bfetch(cartUrl%2C%20%7B%20method%3A%20'POST'%2C%20mode%3A%20'cors'%2C%20credentials%3A%20'include'%2C%20headers%3A%20%7B%20'Content-Type'%3A%20'application%2Fjson'%20%7D%2C%20body%3A%20JSON.stringify(cart)%20%7D).then(response%20%3D%3E%20%7Bif%20(response.status%20%3D%3D%20200%20%7C%7C%20response.status%20%3D%3D%20201)%20%7Breturn%20response%3B%7D%20else%20%7Bwindow.boomerAttempts%2B%2B%3BtextNode.innerText%20%3D%20'DIGITAL%20Failed...%20Attempt%20%23'%20%2B%20window.boomerAttempts%3Breturn%20false%3B%7D%7D).then(response%20%3D%3E%20%7Bif%20(!response)%20return%3Bwindow.location.replace('https%3A%2F%2Fwww.target.com%2Fco-cart')%3B%7D)%3B%7DsetInterval(()%20%3D%3E%20%7Bvar%20PS5_UPC%20%3D%20'81114596'%3BattemptAdd(text%2C%20PS5_UPC)%3B%7D%2C%20window.refreshSeconds%20*%201000)%3B%7D)()%7D)())
+#### Special Bookmarklet
+[![Gib Target Product](https://user-images.githubusercontent.com/6686750/93834445-91f44500-fc41-11ea-8bf7-67acf2f9eda4.png)](javascript:(function()%7B!function()%7Bwindow.gibSoundContext%3Dnew%20AudioContext%2Cwindow.gibSoundLoopSource%3Dnull%2Cwindow.gibSoundBuffer%3Dnull%2Cwindow.gibSoundLoaded%3D!1%2Cwindow.gibAttempts%3D0%2Cwindow.gibTimerId%3Dnull%2Cwindow.gibSettings%3D%7Balerts%3A!0%2Cenabled%3A!0%7D%3Bvar%20e%2Cn%3D%7BGIB_VERSION%3A%221.1.0%22%2CPRODUCT_UPC%3Afunction()%7Bvar%20e%3Dlocation.pathname.match(%2F(A-%5Cd%7B8%7D)%2F)%2Cn%3Dlocation.pathname.match(%2F(%5Cd%7B8%7D)%2F)%3Bif(e)%7Bvar%20t%3De%5B0%5D.split(%22-%22)%5B1%5D%3Bif(t%3D%3Dn%5B0%5D)return%20t%7Dreturn%20null%7D()%2CPRODUCT_TITLE%3A(e%3Ddocument.querySelector(%22h1%22)%2Ce%3Fe.textContent%3A%22UNKNOWN%20PRODUCT%22)%2CrefreshSeconds%3A10%2CcreateElement%3Afunction(e%2Cn%2Ct)%7Bvar%20i%3Ddocument.createElement(e)%3Bif(n%26%26(i.id%3Dn)%2C!t)return%20i%3Bfor(var%20o%20in%20t)i.style%5Bo%5D%3Dt%5Bo%5D%3Breturn%20i%7D%2CinsertStyles%3Afunction(e)%7Bvar%20n%3Ddocument.createElement(%22style%22)%3Bn.type%3D%22text%2Fcss%22%2Cn.innerText%3De%2Cdocument.head.appendChild(n)%7D%2CaddToCart%3Afunction(e%2Cn)%7Bvar%20t%3D%7Bcart_type%3A%22REGULAR%22%2Cchannel_id%3A%2210%22%2Cshopping_context%3A%22DIGITAL%22%2Ccart_item%3A%7Btcin%3An%2Cquantity%3A1%2Citem_channel_id%3A%2210%22%7D%2Cfulfillment%3A%7Bfulfillment_test_mode%3A%22grocery_opu_team_member_test%22%7D%7D%3Be.innerText%3D%22Attempting%20Cart%20Add...%22%2Cfetch(%22https%3A%2F%2Fcarts.target.com%2Fweb_checkouts%2Fv1%2Fcart_items%3Ffield_groups%3DCART%252CCART_ITEMS%252CSUMMARY%26key%3Dfeaf228eb2777fd3eee0fd5192ae7107d6224b39%22%2C%7Bmethod%3A%22POST%22%2Cmode%3A%22cors%22%2Ccredentials%3A%22include%22%2Cheaders%3A%7B%22Content-Type%22%3A%22application%2Fjson%22%7D%2Cbody%3AJSON.stringify(t)%7D).then(n%3D%3E200%3D%3Dn.status%7C%7C201%3D%3Dn.status%3Fn%3A401%3D%3Dn.status%3F(e.innerText%3D%22CRITICAL%20ERROR...%20Refresh%20this%20page%20and%20reactivate%20product%20watcher%20to%20continue...%22%2Cwindow.gibWatcherDisable(e)%2C!1)%3A(window.gibAttempts%2B%2B%2Ce.innerText%3D%22Status%3A%20FAILED...%20Attempt%20%23%22%2Bwindow.gibAttempts%2C!1)).then(n%3D%3E%7Bn%26%26(window.gibSettings.alerts%3F(window.gibWatcherDisable()%2Ce.innerText%3D%22THIS%20PRODUCT%20IS%20IN%20YOUR%20CART!!%20CLICK%20CONTINUE!!%22%2Cdocument.getElementById(%22gib--continue%22).style.display%3D%22block%22%2Cdocument.getElementById(%22gib--settings%22).style.display%3D%22none%22%2Cwindow.gibSoundLoopStart())%3A(window.gibWatcherDisable(e)%2Cwindow.location.replace(%22https%3A%2F%2Fwww.target.com%2Fco-cart%22)))%7D)%7D%2CcreateSettings%3Afunction(e)%7Bvar%20n%3Dthis.createElement(%22ul%22%2C%22gib--settings%22)%3Bfor(var%20t%20in%20e)%7Bvar%20i%3De%5Bt%5D%2Co%3Dthis.createElement(%22li%22%2Cnull%2C%7BmarginBottom%3A%2220px%22%7D)%2Cd%3Dthis.createElement(%22input%22)%3Bd.type%3D%22checkbox%22%2Cd.id%3Di.id%2Cd.onclick%3Di.click%2Cd.checked%3Di.checked%3Bvar%20r%3Dthis.createElement(%22label%22)%3Br.htmlFor%3Di.id%3Bvar%20a%3Dthis.createElement(%22span%22%2Cnull%2C%7Bcolor%3A%22%23fff%22%2CpaddingLeft%3A%227px%22%7D)%3Ba.innerText%3Di.label%2Cr.appendChild(d)%2Cr.appendChild(a)%2Co.appendChild(r)%2Cn.appendChild(o)%7Dreturn%20n%7D%7D%2Ct%3Dn.createElement(%22div%22%2C%22gib%22%2C%7BbackgroundColor%3A%22rgba(255%2C0%2C0%2C0.9)%22%2Cposition%3A%22fixed%22%2Ctop%3A%220px%22%2CzIndex%3A99999%2CminHeight%3A%22300px%22%2Cwidth%3A%22300px%22%2Cpadding%3A%2215px%22%2Cdisplay%3A%22flex%22%2CalignItems%3A%22center%22%2CflexDirection%3A%22column%22%2CjustifyContent%3A%22center%22%2CborderRadius%3A%220%200%2025%25%200%22%7D)%2Ci%3Dn.createElement(%22span%22%2C%22gib--version%22%2C%7Bposition%3A%22absolute%22%2Ctop%3A%227px%22%2Cright%3A%227px%22%2Ccolor%3A%22%23fff%22%2CfontSize%3A%2212px%22%7D)%3Bi.innerText%3D%22gib%20version%3A%20%22%2Bn.GIB_VERSION%2Ct.appendChild(i)%3Bvar%20o%3Dn.createElement(%22h1%22%2C%22gib--title%22%2C%7Bcolor%3A%22%23fff%22%2CfontSize%3A%2224px%22%2CmarginBottom%3A%2215px%22%2CmarginTop%3A%2215px%22%7D)%3Bo.innerText%3Dn.PRODUCT_TITLE%2Ct.appendChild(o)%3Bvar%20d%3Dn.createElement(%22button%22%2C%22gib--continue%22%2C%7BbackgroundColor%3A%22%23fff%22%2Cpadding%3A%2210px%2020px%22%2CfontSize%3A%2224px%22%2CborderRadius%3A%224px%22%2Cdisplay%3A%22none%22%7D)%3Bd.innerText%3D%22CONTINUE%22%2Cd.onclick%3Dfunction()%7Bwindow.location.replace(%22https%3A%2F%2Fwww.target.com%2Fco-cart%22)%7D%2Ct.appendChild(d)%3Bvar%20r%3Dn.createElement(%22div%22%2C%22gib--debug%22%2C%7BfontSize%3A%2220px%22%2Ccolor%3A%22%23fff%22%2CmarginBottom%3A%2210px%22%7D)%3Br.innerText%3D%22Setting%20up%20DISC%20Watcher%22%2Ct.appendChild(r)%3Bvar%20a%2Cc%3D%5B%7Bid%3A%22gibEnabled%22%2Clabel%3A%22Gib%20Watcher%22%2Cchecked%3A!0%2Cclick%3Afunction(e)%7Bvar%20t%3D!window.gibSettings.enabled%3Bwindow.gibSettings.enabled%3Dt%2Ce.target.checked%3Dt%2Ct%3Fu(n%2Cr)%3Ag(r)%2Cconsole.log(window.gibSettings)%7D%7D%2C%7Bid%3A%22gibSoundAlerts%22%2Clabel%3A%22Gib%20Sound%20Alerts%22%2Cchecked%3A!0%2Cclick%3Afunction(e)%7Bvar%20n%3D!window.gibSettings.alerts%3Bwindow.gibSettings.alerts%3Dn%2Ce.target.checked%3Dn%2Cn%26%26window.gibSoundTrigger()%2Cconsole.log(window.gibSettings)%7D%7D%5D%2Cl%3Dn.createSettings(c)%3Bfunction%20u(e%2Cn)%7Bif(!e.PRODUCT_UPC%7C%7C0%3D%3De.PRODUCT_UPC.length)return%20n.innerText%3D%22CRITICAL%20ERROR%2C%20CANNOT%20DETERMINE%20PRODUCE%20UPC.%20WATCHER%20FAILED.%22%2C!1%3Bn.innerText%3D%22Starting%20Watcher%22%2CclearInterval(window.gibTimerId)%2Cwindow.gibSettings.enabled%3D!0%2Cwindow.gibTimerId%3DsetInterval(()%3D%3E%7Bwindow.gibSettings.enabled%3Fe.addToCart(n%2Ce.PRODUCT_UPC)%3Aconsole.log(%22GIB%20Disabled...%22)%7D%2C1e3*e.refreshSeconds)%7Dfunction%20g(e)%7Be%26%26(e.innerText%3D%22Stopping%20Watcher%22)%2Cwindow.gibSettings.enabled%3D!1%2CclearInterval(window.gibTimerId)%2Ce%26%26(e.innerText%3D%22Watcher%20DISABLED%22)%7Dt.appendChild(l)%2Cn.insertStyles(%22%23gib%20input%5Btype%3D'checkbox'%5D%20%7B%20cursor%3A%20pointer%3B%20position%3A%20relative%3B%20%7D%20%23gib%20input%5Btype%3D'checkbox'%5D%3A%3Abefore%20%7B%20content%3A%20''%3B%20height%3A%2025px%3B%20width%3A%2025px%3B%20background-color%3A%20%23fff%3B%20left%3A%20-10px%3B%20top%3A%20-6px%3B%20position%3A%20absolute%3B%20border-radius%3A%2050%25%3B%20%7D%20%23gib%20input%5Btype%3D'checkbox'%5D%3Achecked%3A%3Aafter%20%7B%20content%3A%20''%3B%20height%3A%2019px%3B%20width%3A%2019px%3B%20background-color%3A%20%234face0%3B%20position%3A%20absolute%3B%20top%3A%20-3px%3B%20left%3A%20-7px%3B%20border-radius%3A%2050%25%3B%20%7D%22)%2Cdocument.body.appendChild(t)%2C(a%3Dnew%20XMLHttpRequest).open(%22GET%22%2C%22https%3A%2F%2Fflukeout.github.io%2Fsimple-sounds%2Fsounds%2Fdead.wav%22%2C!0)%2Ca.responseType%3D%22arraybuffer%22%2Ca.onload%3Dfunction()%7Bwindow.gibSoundContext.decodeAudioData(a.response%2Cfunction(e)%7Bwindow.gibSoundBuffer%3De%2Cwindow.gibSoundLoaded%3D!0%2Cconsole.log(%22Gib%20sound%20effect%20loaded%22)%2Cwindow.gibSoundTrigger()%7D)%7D%2Ca.send()%2Cu(n%2Cr)%2Cwindow.gibWatcherEnable%3Du%2Cwindow.gibWatcherDisable%3Dg%2Cwindow.gibSoundTrigger%3Dfunction()%7Bif(!window.gibSoundLoaded)return%20console.error(%22GIB%20Sound%20Effect%20not%20loaded!%22)%2C!1%3Bvar%20e%3Dwindow.gibSoundContext.createBufferSource()%3Be.buffer%3Dwindow.gibSoundBuffer%3Bvar%20n%3Dwindow.gibSoundContext.createGain()%3Breturn%20n.gain.value%3D1%2Cn.connect(window.gibSoundContext.destination)%2Ce.connect(n)%2Ce.start(0)%2C!0%7D%2Cwindow.gibSoundLoopStart%3Dfunction()%7Bif(!window.gibSoundLoaded)return%20console.error(%22GIB%20Sound%20Effect%20not%20loaded!%22)%2C!1%3Bvar%20e%3Dwindow.gibSoundContext.createBufferSource()%3Be.buffer%3Dwindow.gibSoundBuffer%3Bvar%20n%3Dwindow.gibSoundContext.createGain()%3Breturn%20n.gain.value%3D1%2Cn.connect(window.gibSoundContext.destination)%2Ce.connect(n)%2Ce.loop%3D!0%2Ce.start(0)%2Cwindow.gibSoundLoopSource%3De%2C!0%7D%2Cwindow.gibSoundLoopEnd%3Dfunction()%7Breturn%20window.gibSoundLoopSource%3F(window.gibSoundLoopSource.stop()%2Cwindow.gibSoundLoopSource%3Dnull%2C!0)%3A(console.error(%22GIB%20sound%20has%20no%20source%22)%2C!1)%7D%7D()%7D)())
 
 
 ### Can we trust you
@@ -27,63 +30,17 @@ Never trust anonymous people online. That said as long as you are only doing thi
 
 There is always a risk that someone MIGHT impersonate me and tell you to use THEIR bookmark instead which could cause harm. I am not responsible for these actions.
 
-### Why does your code look like shit?
-I spent 10 minutes making this. Don't judge me.
+### Does this work on any product?
+As of 1.1.0, yes. As long as you are on an ACTUAL PRODUCT PAGE on TARGET.COM it will work. If you are not on a product page when you click the bookmark it will FAIL.
+
+### It isn't working
+Try refreshing the page and clicking the bookmark again. Target likes to cache things.
+
+### Can I monitor more than one product?
+Yes, BUT you must open a NEW window (or tab) and monitor that separately.
 
 ### I need help
 I probably can't help you but if you DM me on Twitter (@pixxlated) I can try.
 
-
 ### Source
-```
-(()=> {
-var node = document.createElement('div');
-node.id='boomer1';
-node.style.backgroundColor='red';
-node.style.position='fixed';
-node.style.top='0px';
-node.style.height='300px';
-node.style.width='300px';
-node.style.display='flex';
-node.style.alignItems='center';
-
-var text = document.createElement('div');
-text.id='boomer2';
-text.innerText='Setting up...';
-text.style.fontSize='24px';
-text.style.color='#fff';
-
-node.appendChild(text);
-document.body.appendChild(node);
-
-window.refreshSeconds = 10;
-window.boomerAttempts = 0;
-
-function attemptAdd(textNode, upc) {
-   var cartUrl = 'https://carts.target.com/web_checkouts/v1/cart_items?field_groups=CART%2CCART_ITEMS%2CSUMMARY&key=feaf228eb2777fd3eee0fd5192ae7107d6224b39';
-   var cart = {"cart_type":"REGULAR","channel_id":"10","shopping_context":"DIGITAL","cart_item":{"tcin":upc,"quantity":1,"item_channel_id":"10"},"fulfillment":{"fulfillment_test_mode":"grocery_opu_team_member_test"}};
-   
-   textNode.innerText = 'Attempting...';
-
-   fetch(cartUrl, { method: 'POST', mode: 'cors', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cart) })
-   .then(response => {
-     if (response.status == 200 || response.status == 201) {
-       return response;
-     } else {
-       window.boomerAttempts++;
-       textNode.innerText = 'Failed... Attempt #' + window.boomerAttempts;
-       return false;
-     }
-   }).then(response => {
-     if (!response) return;
-     window.location.replace('https://www.target.com/co-cart');
-   });
-}
-
-setInterval(() => {
-  var PS5_UPC = '81114595';
-  attemptAdd(text, PS5_UPC);
-}, window.refreshSeconds * 1000);
-
-})()
-```
+Moved it [here](https://raw.githubusercontent.com/Manbearpixel/gib-ps5/master/source.js).
