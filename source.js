@@ -1,58 +1,16 @@
 (function() {
-function detectUPC() {
-  var upcMatches = location.pathname.match(/(A-\d{8})/);
-  var onlyUpc = location.pathname.match(/(\d{8})/);
-  if (upcMatches) {
-    var upc1 = upcMatches[0].split('-')[1];
-    var upc2 = onlyUpc[0];
-    if (upc1 == upc2) return upc1;
+function gamestopProductMeta() {
+  try {
+    var meta = document.querySelector('button.add-to-cart').getAttribute('data-gtmdata');
+    var product = JSON.parse(meta);
+    return product;
+  } catch(err) {
+    console.warn(err);
+    return null;
   }
-  return null;
 }
 
-function detectProductName() {
-  var productHeading = document.querySelector('h1');
-  if (!productHeading) return 'UNKNOWN PRODUCT';
-  return productHeading.textContent;
-}
-
-window.gibSoundContext = new AudioContext();
-window.gibSoundLoopSource = null;
-window.gibSoundBuffer = null;
-window.gibSoundLoaded = false;
-
-window.gibAttempts = 0;
-window.gibTimerId = null;
-window.gibSettings = {
-  alerts: true,
-  enabled: true
-};
-
-var gib = {
-  GIB_VERSION: '1.1.0',
-  PRODUCT_UPC: detectUPC(),
-  PRODUCT_TITLE: detectProductName(),
-
-  refreshSeconds: 10,
-
-  createElement: function(tag, id, styles) {
-    var node = document.createElement(tag);
-    if (id) node.id = id;
-    if (!styles) return node;
-    for (var style in styles) {
-      node.style[style] = styles[style];
-    }
-    return node;
-  },
-
-  insertStyles: function(styles) {
-    var sheet = document.createElement('style');
-    sheet.type = 'text/css';
-    sheet.innerText = styles;
-    document.head.appendChild(sheet);
-  },
-
-  addToCart: function(DEBUG_NODE, UPC) {
+function target_addToCart(DEBUG_NODE, UPC) {
     var cartUrl = 'https://carts.target.com/web_checkouts/v1/cart_items?field_groups=CART%2CCART_ITEMS%2CSUMMARY&key=feaf228eb2777fd3eee0fd5192ae7107d6224b39';
     var cart = {"cart_type":"REGULAR","channel_id":"10","shopping_context":"DIGITAL","cart_item":{"tcin":UPC,"quantity":1,"item_channel_id":"10"},"fulfillment":{"fulfillment_test_mode":"grocery_opu_team_member_test"}};
     
@@ -84,6 +42,142 @@ var gib = {
         window.location.replace('https://www.target.com/co-cart');
       }
     });
+}
+
+function gamestop_addToCart(DEBUG_NODE, UPC) {
+  var cartUrl = 'https://www.gamestop.com/on/demandware.store/Sites-gamestop-us-Site/default/Cart-AddProduct?redesignFlag=true';
+  var cart = 'pid=' + UPC + '&quantity=1&pageSpecified=PLP&recentCheck=true&addToCartSource=RecentlyViewed';
+
+  DEBUG_NODE.innerText = 'Attempting Cart Add...';
+
+  fetch(cartUrl, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+    },
+    body: cart
+  })
+  .then((response) => {
+    if (response.status >= 200 && response.status < 300) {
+      return response.json();
+    } else if (response.status == 401) {
+      DEBUG_NODE.innerText = 'CRITICAL ERROR... Refresh this page and reactivate product watcher to continue...';
+      window.gibWatcherDisable(DEBUG_NODE);
+      return false;
+    } else {
+      window.gibAttempts++;
+      DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
+      return false;
+    }
+  })
+  .then((response) => {
+    if (!response || !response.hasOwnProperty('error')) {
+      window.gibAttempts++;
+      DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
+      return false;
+    }
+
+    if (response.error) {
+      window.gibAttempts++;
+      var errorMsg = response.message;
+      console.warn('Unable to add... %s', errorMsg);
+      DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
+      return false;
+    }
+
+    if (window.gibSettings.alerts) {
+      window.gibWatcherDisable();
+      DEBUG_NODE.innerText = 'THIS PRODUCT IS IN YOUR CART!! CLICK CONTINUE!!';
+      document.getElementById('gib--continue').style.display = 'block';
+      document.getElementById('gib--settings').style.display = 'none';
+      window.gibSoundLoopStart();
+    } else {
+      window.gibWatcherDisable(DEBUG_NODE);
+      window.location.replace('https://www.gamestop.com/checkout');
+    }
+  });
+}
+
+function detectRetailer() {
+  var host = location.host || location.hostname;
+  if (!!host.match(/gamestop/ig)) return 'gamestop';
+  if (!!host.match(/target/ig)) return 'target';
+}
+
+function detectUPC() {
+  if (window.gibRetailer == 'target') {
+    var upcMatches = location.pathname.match(/(A-\d{8})/);
+    var onlyUpc = location.pathname.match(/(\d{8})/);
+    if (upcMatches) {
+      var upc1 = upcMatches[0].split('-')[1];
+      var upc2 = onlyUpc[0];
+      if (upc1 == upc2) return upc1;
+    }
+  } else if (window.gibRetailer == 'gamestop') {
+    var meta = gamestopProductMeta();
+    if (!meta) return null;
+    return meta.productInfo.sku;
+  }
+  return null;
+}
+
+function detectProductName() {
+  if (window.gibRetailer == 'target') {
+    var productHeading = document.querySelector('h1');
+    if (!productHeading) return 'UNKNOWN PRODUCT';
+    return productHeading.textContent;
+  } else if (window.gibRetailer == 'gamestop') {
+    var meta = gamestopProductMeta();
+    if (!meta) return '';
+    return meta.productInfo.name;
+  }
+  return '';
+}
+
+window.gibSoundContext = new AudioContext();
+window.gibSoundLoopSource = null;
+window.gibSoundBuffer = null;
+window.gibSoundLoaded = false;
+
+window.gibRetailer = detectRetailer();
+window.gibAttempts = 0;
+window.gibTimerId = null;
+window.gibSettings = {
+  alerts: true,
+  enabled: true
+};
+
+var gib = {
+  GIB_VERSION: '2.0.0',
+  PRODUCT_UPC: detectUPC(),
+  PRODUCT_TITLE: detectProductName(),
+
+  refreshSeconds: 10,
+
+  createElement: function(tag, id, styles) {
+    var node = document.createElement(tag);
+    if (id) node.id = id;
+    if (!styles) return node;
+    for (var style in styles) {
+      node.style[style] = styles[style];
+    }
+    return node;
+  },
+
+  insertStyles: function(styles) {
+    var sheet = document.createElement('style');
+    sheet.type = 'text/css';
+    sheet.innerText = styles;
+    document.head.appendChild(sheet);
+  },
+
+  addToCart: function(DEBUG_NODE, UPC) {
+    if (window.gibRetailer == 'target') {
+      window.gibAddToCartTarget(DEBUG_NODE, UPC);
+    } else if (window.gibRetailer == 'gamestop') {
+      window.gibAddToCartGameStop(DEBUG_NODE, UPC);
+    }
   },
 
   createSettings: function(options) {
@@ -96,7 +190,7 @@ var gib = {
 
       var toggle = this.createElement('input');
       toggle.type = 'checkbox';
-      toggle.id = option['id']
+      toggle.id = option['id'];
       toggle.onclick = option['click'];
       toggle.checked = option['checked'];
 
@@ -121,7 +215,7 @@ var gib = {
 var gibStyles = "#gib input[type='checkbox'] { cursor: pointer; position: relative; } #gib input[type='checkbox']::before { content: ''; height: 25px; width: 25px; background-color: #fff; left: -10px; top: -6px; position: absolute; border-radius: 50%; } #gib input[type='checkbox']:checked::after { content: ''; height: 19px; width: 19px; background-color: #4face0; position: absolute; top: -3px; left: -7px; border-radius: 50%; }";
 
 var wrapper = gib.createElement('div', 'gib', {
-  backgroundColor: 'rgba(255,0,0,0.9)',
+  backgroundColor: window.gibRetailer == 'target' ? 'rgba(255,0,0,0.9)' : 'rgba(0,0,0,0.9)',
   position: 'fixed',
   top: '0px',
   zIndex: 99999,
@@ -163,7 +257,11 @@ var continueButton = gib.createElement('button', 'gib--continue', {
 });
 continueButton.innerText = 'CONTINUE';
 continueButton.onclick = function() {
-  window.location.replace('https://www.target.com/co-cart');
+  if (window.gibRetailer == 'target') {
+    window.location.replace('https://www.target.com/co-cart');
+  } else if (window.gibRetailer == 'gamestop') {
+    window.location.replace('https://www.gamestop.com/checkout');
+  }
 };
 wrapper.appendChild(continueButton);
 
@@ -300,6 +398,9 @@ function stopWatcher(DEBUG_NODE) {
 
 loadSound();
 startWatcher(gib, debug);
+
+window.gibAddToCartTarget = target_addToCart;
+window.gibAddToCartGameStop = gamestop_addToCart;
 
 window.gibWatcherEnable = startWatcher;
 window.gibWatcherDisable = stopWatcher;
