@@ -48,6 +48,15 @@ function gamestop_addToCart(DEBUG_NODE, UPC) {
   var cartUrl = 'https://www.gamestop.com/on/demandware.store/Sites-gamestop-us-Site/default/Cart-AddProduct?redesignFlag=true';
   var cart = 'pid=' + UPC + '&quantity=1&pageSpecified=PLP&recentCheck=true&addToCartSource=RecentlyViewed';
 
+  if (window.gibRetryCountdownNow > 0) {
+    window.gibRetryCountdownNow--;
+    setTimeout(function() {
+      window.gibSoundLoopEnd();
+    }, (10 * 1000));
+    DEBUG_NODE.innerText = "SHADOW BANNED! To prove to GameStop you're real click around on this page before we attempt to try again. Will retry in " + window.gibRetryCountdownNow + 'minute(s)';
+    return;
+  }
+
   DEBUG_NODE.innerText = 'Attempting Cart Add...';
 
   fetch(cartUrl, {
@@ -65,6 +74,13 @@ function gamestop_addToCart(DEBUG_NODE, UPC) {
       DEBUG_NODE.innerText = 'CRITICAL ERROR... Refresh this page and reactivate product watcher to continue...';
       window.gibWatcherDisable(DEBUG_NODE);
       return false;
+    } else if (response.status == 403) {
+      window.gibRetryCountdownNow = window.gibRetryCountdownMAX;
+      DEBUG_NODE.innerText = "SHADOW BANNED! To prove to GameStop you're real click around on this page before we attempt to try again. Will retry in " + window.gibRetryCountdownNow + 'minute(s)';
+      window.gibSoundLoopStart(true);
+      setTimeout(function() {
+        window.gibSoundLoopEnd();
+      }, (10 * 1000));
     } else {
       window.gibAttempts++;
       DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
@@ -140,6 +156,9 @@ window.gibSoundLoopSource = null;
 window.gibSoundBuffer = null;
 window.gibSoundLoaded = false;
 
+window.gibAttemptSecondsLeft = 0;
+window.gibRetryCountdownMAX = 5; // minutes
+window.gibRetryCountdownNow = 0;
 window.gibRetailer = detectRetailer();
 window.gibAttempts = 0;
 window.gibTimerId = null;
@@ -153,7 +172,7 @@ var gib = {
   PRODUCT_UPC: detectUPC(),
   PRODUCT_TITLE: detectProductName(),
 
-  refreshSeconds: 10,
+  refreshSeconds: 60,
 
   createElement: function(tag, id, styles) {
     var node = document.createElement(tag);
@@ -268,7 +287,7 @@ wrapper.appendChild(continueButton);
 var debug = gib.createElement('div', 'gib--debug', {
   fontSize: '20px',
   color: '#fff',
-  marginBottom: '10px'
+  marginBottom: '30px'
 });
 debug.innerText = 'Setting up DISC Watcher';
 wrapper.appendChild(debug);
@@ -341,8 +360,10 @@ function triggerSound() {
   return true;
 }
 
-function startSoundLoop() {
-  if (!window.gibSoundLoaded) {
+function startSoundLoop(override) {
+  if (typeof override == 'undefined') override = false;
+
+  if (!window.gibSoundLoaded && !override) {
     console.error('GIB Sound Effect not loaded!');
     return false;
   }
@@ -378,15 +399,28 @@ function startWatcher(GIB, DEBUG_NODE) {
   }
 
   DEBUG_NODE.innerText = 'Starting Watcher';
+
   clearInterval(window.gibTimerId);
   window.gibSettings.enabled = true;
+  window.gibAttemptSecondsLeft = GIB.refreshSeconds;
+
   window.gibTimerId = setInterval(() => {
     if (!window.gibSettings.enabled) {
       console.log('GIB Disabled...');
       return;
     }
-    GIB.addToCart(DEBUG_NODE, GIB.PRODUCT_UPC);
-  }, GIB.refreshSeconds * 1000);
+
+    window.gibAttemptSecondsLeft--;
+
+    if (window.gibRetryCountdownNow <= 0) {
+      DEBUG_NODE.innerText = 'Attempt# ' + window.gibAttempts + '... Retrying in ' + window.gibAttemptSecondsLeft + ' second(s)...';
+    }
+
+    if (window.gibAttemptSecondsLeft <= 0) {
+      window.gibAttemptSecondsLeft = GIB.refreshSeconds;
+      GIB.addToCart(DEBUG_NODE, GIB.PRODUCT_UPC);
+    }
+  }, 1000);
 }
 
 function stopWatcher(DEBUG_NODE) {
