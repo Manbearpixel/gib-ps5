@@ -74,7 +74,7 @@ window.gibinit = function() {
     PRODUCT_UPC:    detectUPC(),
     PRODUCT_TITLE:  detectProductName(),
 
-    refreshSeconds: 10,
+    refreshSeconds: 60,
 
     createElement: function(tag, id, styles) {
       var node = document.createElement(tag);
