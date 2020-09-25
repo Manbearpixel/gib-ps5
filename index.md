@@ -41,6 +41,7 @@ With a little magic this bookmark script essentially acts like a "pre-order" or 
 #### Product Links
   - [Target PS5 Product page](https://www.target.com/p/playstation-5-console/-/A-81114595)
   - [GameStop PS5 Product page](https://www.gamestop.com/video-games/playstation-5/consoles/products/playstation-5/11108140.html)
+  - [GameStop PS5 BUNDLE](https://www.gamestop.com/video-games/playstation-5/consoles/products/playstation-5-starter-system-bundle---ships-by-11-30-2020/B225169D.html)
 
 ### Can we trust you
 Never trust anonymous people online. That said as long as you are only doing this through my official Twitter (@pixxlated) or Github (manbearpixel) then you are safe. The source code is below so you can take that as you wish and inspect it yourself.
