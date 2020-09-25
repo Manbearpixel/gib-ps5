@@ -63,7 +63,7 @@ window.gibinit = function() {
   window.gibRetailer  = detectRetailer();
   window.gibAttempts  = 0;
   window.gibTimerId   = null;
-  window.gibVerified  = -1;
+  window.gibVerified  = -5;
   window.gibSettings  = {
     alerts: true,
     enabled: true
@@ -74,7 +74,7 @@ window.gibinit = function() {
     PRODUCT_UPC:    detectUPC(),
     PRODUCT_TITLE:  detectProductName(),
 
-    refreshSeconds: 60,
+    refreshSeconds: window.gibRetailer == 'gamestop' ? 60 : 20,
 
     createElement: function(tag, id, styles) {
       var node = document.createElement(tag);
@@ -162,7 +162,7 @@ window.gibinit = function() {
           window.gibSoundLoopStart();
         } else {
           window.gibWatcherDisable(DEBUG_NODE);
-          window.location.replace('https://www.target.com/co-cart');
+          window.location.replace('https://www.target.com/co-review');
         }
       });
   }
@@ -174,6 +174,8 @@ window.gibinit = function() {
     var BUILD_WARNING = function() {
       if (window.gibVerified >= 0) {
         return 'VERIFIED! Will restart watcher in ' + window.gibRetryCountdownNow + ' minute(s)';
+      } else if (window.gibVerified > -5) {
+        return 'ALMOST VERIFIED! Click this page a few more times! Will restart watcher in ' + window.gibRetryCountdownNow + ' minute(s)';
       }
 
       return "WARNING! Click ANYWHERE to prove you're not a bot! Will restart watcher in " + window.gibRetryCountdownNow + ' minute(s)';
@@ -181,13 +183,11 @@ window.gibinit = function() {
 
     if (window.gibRetryCountdownNow > 0) {
       window.gibRetryCountdownNow--;
-      if (window.gibVerified < 0) {
+      if (window.gibVerified <= -5) {
         window.gibSoundLoopStart(true);
         setTimeout(function() {
           window.gibSoundLoopEnd();
         }, (10 * 1000));
-      } else {
-        removeEventListener('click', window.gibVerifyUser, false);
       }
 
       if (window.gibRetryCountdownNow > 0) {
@@ -235,7 +235,7 @@ window.gibinit = function() {
 
       if (response == 'BOT') {
         window.gibRetryCountdownNow = window.gibRetryCountdownMAX;
-        window.gibVerified = -1;
+        window.gibVerified = -5;
         DEBUG_NODE.innerText = BUILD_WARNING();
         addEventListener('click', window.gibVerifyUser, false);
         window.gibSoundLoopStart(true);
@@ -419,7 +419,7 @@ window.gibinit = function() {
   continueButton.innerText = 'CONTINUE';
   continueButton.onclick = function() {
     if (window.gibRetailer == 'target') {
-      window.location.replace('https://www.target.com/co-cart');
+      window.location.replace('https://www.target.com/co-review');
     } else if (window.gibRetailer == 'gamestop') {
       window.location.replace('https://www.gamestop.com/checkout');
     }
@@ -484,9 +484,14 @@ window.gibinit = function() {
   window.gibSoundLoopEnd = endSoundLoop;
 
   window.gibVerifyUser = function() {
-    window.gibVerified = 1;
-    console.log('Verified user');
-    document.getElementById('gib--debug').innerText = 'VERIFIED! Will retry in ' + window.gibRetryCountdownNow + ' minute(s)';
+    window.gibVerified++;
+    console.log('Verified user %i', window.gibVerified);
+    if (window.gibVerified < 0) {
+      document.getElementById('gib--debug').innerText = 'ALMOST VERIFIED! Click this page a few more times! Will retry in ' + window.gibRetryCountdownNow + ' minute(s)';
+      return;
+    }
+
+    document.getElementById('gib--debug').innerText = 'VERIFIED! Will restart watcher in ' + window.gibRetryCountdownNow + ' minute(s)';
     removeEventListener('click', window.gibVerifyUser, false);
   }
 }
