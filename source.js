@@ -1,4 +1,15 @@
 window.gibinit = function() {
+  if (typeof window.gibSettings != 'undefined') {
+    console.warn('GIB Already exists... Exiting');
+    return false;
+  }
+
+  function detectRetailer() {
+    var host = location.host || location.hostname;
+    if (!!host.match(/gamestop/ig)) return 'gamestop';
+    if (!!host.match(/target/ig)) return 'target';
+  }
+
   function gamestopProductMeta() {
     try {
       var meta = document.querySelector('button.add-to-cart').getAttribute('data-gtmdata');
@@ -8,117 +19,6 @@ window.gibinit = function() {
       console.warn(err);
       return null;
     }
-  }
-
-  function target_addToCart(DEBUG_NODE, UPC) {
-      var cartUrl = 'https://carts.target.com/web_checkouts/v1/cart_items?field_groups=CART%2CCART_ITEMS%2CSUMMARY&key=feaf228eb2777fd3eee0fd5192ae7107d6224b39';
-      var cart = {"cart_type":"REGULAR","channel_id":"10","shopping_context":"DIGITAL","cart_item":{"tcin":UPC,"quantity":1,"item_channel_id":"10"},"fulfillment":{"fulfillment_test_mode":"grocery_opu_team_member_test"}};
-      
-      DEBUG_NODE.innerText = 'Attempting Cart Add...';
-
-      fetch(cartUrl, { method: 'POST', mode: 'cors', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cart) })
-      .then(response => {
-        if (response.status == 200 || response.status == 201) {
-          return response;
-        } else if (response.status == 401) {
-          DEBUG_NODE.innerText = 'CRITICAL ERROR... Refresh this page and reactivate product watcher to continue...';
-          window.gibWatcherDisable(DEBUG_NODE);
-          return false;
-        } else {
-          window.gibAttempts++;
-          DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
-          return false;
-        }
-      }).then(response => {
-        if (!response) return;
-        if (window.gibSettings.alerts) {
-          window.gibWatcherDisable();
-          DEBUG_NODE.innerText = 'THIS PRODUCT IS IN YOUR CART!! CLICK CONTINUE!!';
-          document.getElementById('gib--continue').style.display = 'block';
-          document.getElementById('gib--settings').style.display = 'none';
-          window.gibSoundLoopStart();
-        } else {
-          window.gibWatcherDisable(DEBUG_NODE);
-          window.location.replace('https://www.target.com/co-cart');
-        }
-      });
-  }
-
-  function gamestop_addToCart(DEBUG_NODE, UPC) {
-    var cartUrl = 'https://www.gamestop.com/on/demandware.store/Sites-gamestop-us-Site/default/Cart-AddProduct?redesignFlag=true';
-    var cart = 'pid=' + UPC + '&quantity=1&pageSpecified=PLP&recentCheck=true&addToCartSource=RecentlyViewed';
-
-    if (window.gibRetryCountdownNow > 0) {
-      window.gibRetryCountdownNow--;
-      setTimeout(function() {
-        window.gibSoundLoopEnd();
-      }, (10 * 1000));
-      DEBUG_NODE.innerText = "WARNING! Prove to GameStop you're by clicking around on this page before we attempt to try again. Will retry in " + window.gibRetryCountdownNow + 'minute(s)';
-      return;
-    }
-
-    DEBUG_NODE.innerText = 'Attempting Cart Add...';
-
-    fetch(cartUrl, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-      },
-      body: cart
-    })
-    .then((response) => {
-      if (response.status >= 200 && response.status < 300) {
-        return response.json();
-      } else if (response.status == 401) {
-        DEBUG_NODE.innerText = 'CRITICAL ERROR... Refresh this page and reactivate product watcher to continue...';
-        window.gibWatcherDisable(DEBUG_NODE);
-        return false;
-      } else if (response.status == 403) {
-        window.gibRetryCountdownNow = window.gibRetryCountdownMAX;
-        DEBUG_NODE.innerText = "WARNING! Prove to GameStop you're by clicking around on this page before we attempt to try again. Will retry in " + window.gibRetryCountdownNow + 'minute(s)';
-        window.gibSoundLoopStart(true);
-        setTimeout(function() {
-          window.gibSoundLoopEnd();
-        }, (10 * 1000));
-      } else {
-        window.gibAttempts++;
-        DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
-        return false;
-      }
-    })
-    .then((response) => {
-      if (!response || !response.hasOwnProperty('error')) {
-        window.gibAttempts++;
-        DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
-        return false;
-      }
-
-      if (response.error) {
-        window.gibAttempts++;
-        var errorMsg = response.message;
-        console.warn('Unable to add... %s', errorMsg);
-        DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
-        return false;
-      }
-
-      if (window.gibSettings.alerts) {
-        window.gibWatcherDisable();
-        DEBUG_NODE.innerText = 'THIS PRODUCT IS IN YOUR CART!! CLICK CONTINUE!!';
-        document.getElementById('gib--continue').style.display = 'block';
-        document.getElementById('gib--settings').style.display = 'none';
-        window.gibSoundLoopStart();
-      } else {
-        window.gibWatcherDisable(DEBUG_NODE);
-        window.location.replace('https://www.gamestop.com/checkout');
-      }
-    });
-  }
-
-  function detectRetailer() {
-    var host = location.host || location.hostname;
-    if (!!host.match(/gamestop/ig)) return 'gamestop';
-    if (!!host.match(/target/ig)) return 'target';
   }
 
   function detectUPC() {
@@ -151,28 +51,30 @@ window.gibinit = function() {
     return '';
   }
 
-  window.gibSoundContext = new AudioContext();
-  window.gibSoundLoopSource = null;
-  window.gibSoundBuffer = null;
-  window.gibSoundLoaded = false;
+  window.gibSoundContext      = new AudioContext();
+  window.gibSoundLoopSource   = null;
+  window.gibSoundBuffer       = null;
+  window.gibSoundLoaded       = false;
 
-  window.gibAttemptSecondsLeft = 0;
-  window.gibRetryCountdownMAX = 2; // minutes
-  window.gibRetryCountdownNow = 0;
-  window.gibRetailer = detectRetailer();
-  window.gibAttempts = 0;
-  window.gibTimerId = null;
-  window.gibSettings = {
+  window.gibAttemptSecondsLeft  = 0;
+  window.gibRetryCountdownMAX   = 2; // minutes
+  window.gibRetryCountdownNow   = 0;
+
+  window.gibRetailer  = detectRetailer();
+  window.gibAttempts  = 0;
+  window.gibTimerId   = null;
+  window.gibVerified  = -1;
+  window.gibSettings  = {
     alerts: true,
     enabled: true
   };
 
   var gib = {
-    GIB_VERSION: '2.0.0',
-    PRODUCT_UPC: detectUPC(),
-    PRODUCT_TITLE: detectProductName(),
+    GIB_VERSION:    '2.2.0',
+    PRODUCT_UPC:    detectUPC(),
+    PRODUCT_TITLE:  detectProductName(),
 
-    refreshSeconds: 45,
+    refreshSeconds: 10,
 
     createElement: function(tag, id, styles) {
       var node = document.createElement(tag);
@@ -230,6 +132,246 @@ window.gibinit = function() {
       return list;
     }
   };
+
+  function target_addToCart(DEBUG_NODE, UPC) {
+      var cartUrl = 'https://carts.target.com/web_checkouts/v1/cart_items?field_groups=CART%2CCART_ITEMS%2CSUMMARY&key=feaf228eb2777fd3eee0fd5192ae7107d6224b39';
+      var cart = {"cart_type":"REGULAR","channel_id":"10","shopping_context":"DIGITAL","cart_item":{"tcin":UPC,"quantity":1,"item_channel_id":"10"},"fulfillment":{"fulfillment_test_mode":"grocery_opu_team_member_test"}};
+      
+      DEBUG_NODE.innerText = 'Attempting Cart Add...';
+
+      fetch(cartUrl, { method: 'POST', mode: 'cors', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cart) })
+      .then(function(response) {
+        if (response.status == 200 || response.status == 201) {
+          return response;
+        } else if (response.status == 401) {
+          DEBUG_NODE.innerText = 'CRITICAL ERROR... Refresh this page and reactivate product watcher to continue...';
+          window.gibWatcherDisable(DEBUG_NODE);
+          return false;
+        } else {
+          window.gibAttempts++;
+          DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
+          return false;
+        }
+      }).then(function(response) {
+        if (!response) return;
+        if (window.gibSettings.alerts) {
+          window.gibWatcherDisable();
+          DEBUG_NODE.innerText = 'THIS PRODUCT IS IN YOUR CART!! CLICK CONTINUE!!';
+          document.getElementById('gib--continue').style.display = 'block';
+          document.getElementById('gib--settings').style.display = 'none';
+          window.gibSoundLoopStart();
+        } else {
+          window.gibWatcherDisable(DEBUG_NODE);
+          window.location.replace('https://www.target.com/co-cart');
+        }
+      });
+  }
+
+  function gamestop_addToCart(DEBUG_NODE, UPC) {
+    var cartUrl = 'https://www.gamestop.com/on/demandware.store/Sites-gamestop-us-Site/default/Cart-AddProduct?redesignFlag=true';
+    var cart = 'pid=' + UPC + '&quantity=1&pageSpecified=PLP&recentCheck=true&addToCartSource=RecentlyViewed';
+
+    var BUILD_WARNING = function() {
+      if (window.gibVerified >= 0) {
+        return 'VERIFIED! Will restart watcher in ' + window.gibRetryCountdownNow + ' minute(s)';
+      }
+
+      return "WARNING! Click ANYWHERE to prove you're not a bot! Will restart watcher in " + window.gibRetryCountdownNow + ' minute(s)';
+    }
+
+    if (window.gibRetryCountdownNow > 0) {
+      window.gibRetryCountdownNow--;
+      if (window.gibVerified < 0) {
+        window.gibSoundLoopStart(true);
+        setTimeout(function() {
+          window.gibSoundLoopEnd();
+        }, (10 * 1000));
+      } else {
+        removeEventListener('click', window.gibVerifyUser, false);
+      }
+
+      if (window.gibRetryCountdownNow > 0) {
+        DEBUG_NODE.innerText = BUILD_WARNING();
+      }
+      return;
+    }
+
+    DEBUG_NODE.innerText = 'Attempting Cart Add...';
+
+    fetch(cartUrl, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+      },
+      body: cart
+    })
+    .then(function(response) {
+      if (response.status >= 200 && response.status < 300) {
+        return response.json();
+      } else if (response.status == 401) {
+        return 'AUTH';
+      } else if (response.status == 403) {
+        return 'BOT';
+      }
+      return false;
+    })
+    .then(function(response) {
+      if (!response) {
+        window.gibAttempts++;
+        DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
+        return false;
+      }
+
+      if (response == 'AUTH') {
+        DEBUG_NODE.innerText = 'CRITICAL ERROR... Refresh this page and reactivate product watcher to continue...';
+        window.gibWatcherDisable(DEBUG_NODE);
+        window.gibSoundLoopStart(true);
+        setTimeout(function() {
+          window.gibSoundLoopEnd();
+        }, (10 * 1000));
+        return false;
+      }
+
+      if (response == 'BOT') {
+        window.gibRetryCountdownNow = window.gibRetryCountdownMAX;
+        window.gibVerified = -1;
+        DEBUG_NODE.innerText = BUILD_WARNING();
+        addEventListener('click', window.gibVerifyUser, false);
+        window.gibSoundLoopStart(true);
+        setTimeout(function() {
+          window.gibSoundLoopEnd();
+        }, (10 * 1000));
+        return false;
+      }
+
+      if (response.error) {
+        window.gibAttempts++;
+        var errorMsg = response.message;
+        console.warn('Unable to add... %s', errorMsg);
+        DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
+        return false;
+      }
+
+      if (window.gibSettings.alerts) {
+        window.gibWatcherDisable();
+        DEBUG_NODE.innerText = 'THIS PRODUCT IS IN YOUR CART!! CLICK CONTINUE!!';
+        document.getElementById('gib--continue').style.display = 'block';
+        document.getElementById('gib--settings').style.display = 'none';
+        window.gibSoundLoopStart();
+      } else {
+        window.gibWatcherDisable(DEBUG_NODE);
+        window.location.replace('https://www.gamestop.com/checkout');
+      }
+    });
+  }
+
+  function loadSound() {
+    var request = new XMLHttpRequest();
+    request.open('GET', 'https://flukeout.github.io/simple-sounds/sounds/dead.wav', true);
+    request.responseType = 'arraybuffer';
+    request.onload = function() {
+      window.gibSoundContext.decodeAudioData(request.response, function(nb) {
+        window.gibSoundBuffer = nb;
+        window.gibSoundLoaded = true;
+        console.log('Gib sound effect loaded');
+        window.gibSoundTrigger();
+      });
+    };
+    request.send();
+  }
+
+  function triggerSound() {
+    if (!window.gibSoundLoaded) {
+      console.error('GIB Sound Effect not loaded!');
+      return false;
+    }
+
+    var soundVolume = 1;
+    var source = window.gibSoundContext.createBufferSource();
+    source.buffer = window.gibSoundBuffer;
+    var volume = window.gibSoundContext.createGain();
+    volume.gain.value = soundVolume;
+    volume.connect(window.gibSoundContext.destination);
+    source.connect(volume);
+    source.start(0);
+    return true;
+  }
+
+  function startSoundLoop(override) {
+    if (typeof override == 'undefined') override = false;
+
+    if (!window.gibSoundLoaded && !override) {
+      console.error('GIB Sound Effect not loaded!');
+      return false;
+    }
+
+    var soundVolume = 1;
+    var source = window.gibSoundContext.createBufferSource();
+    source.buffer = window.gibSoundBuffer;
+    var volume = window.gibSoundContext.createGain();
+    volume.gain.value = soundVolume;
+    volume.connect(window.gibSoundContext.destination);
+    source.connect(volume);
+    source.loop = true;
+    source.start(0);
+    window.gibSoundLoopSource = source;
+    return true;
+  }
+
+  function endSoundLoop() {
+    if (!window.gibSoundLoopSource) {
+      console.error('GIB sound has no source');
+      return false;
+    }
+
+    window.gibSoundLoopSource.stop();
+    window.gibSoundLoopSource = null;
+    return true;
+  }
+
+  function startWatcher(GIB, DEBUG_NODE) {
+    if (!GIB.PRODUCT_UPC || GIB.PRODUCT_UPC.length == 0) {
+      DEBUG_NODE.innerText = 'CRITICAL ERROR, CANNOT DETERMINE PRODUCE UPC. WATCHER FAILED.';
+      window.gibWatcherDisable();
+      window.gibSoundLoopStart(true);
+      setTimeout(function() {
+        window.gibSoundLoopEnd();
+      }, (10 * 1000));
+      return false;
+    }
+
+    DEBUG_NODE.innerText = 'Starting Watcher';
+
+    clearInterval(window.gibTimerId);
+    window.gibSettings.enabled = true;
+    window.gibAttemptSecondsLeft = GIB.refreshSeconds;
+
+    window.gibTimerId = setInterval(() => {
+      if (!window.gibSettings.enabled) {
+        console.log('GIB Disabled...');
+        return;
+      }
+
+      window.gibAttemptSecondsLeft--;
+
+      if (window.gibRetryCountdownNow <= 0) {
+        DEBUG_NODE.innerText = 'Attempt#' + window.gibAttempts + '... Retrying in ' + window.gibAttemptSecondsLeft + ' second(s)...';
+      }
+
+      if (window.gibAttemptSecondsLeft <= 0) {
+        window.gibAttemptSecondsLeft = GIB.refreshSeconds;
+        GIB.addToCart(DEBUG_NODE, GIB.PRODUCT_UPC);
+      }
+    }, 1000);
+  }
+
+  function stopWatcher(DEBUG_NODE) {
+    if (DEBUG_NODE) DEBUG_NODE.innerText = 'Stopping Watcher';
+    window.gibSettings.enabled = false;
+    clearInterval(window.gibTimerId);
+    if (DEBUG_NODE) DEBUG_NODE.innerText = 'Watcher DISABLED';
+  }
 
   var gibStyles = "#gib input[type='checkbox'] { cursor: pointer; position: relative; } #gib input[type='checkbox']::before { content: ''; height: 25px; width: 25px; background-color: #fff; left: -10px; top: -6px; position: absolute; border-radius: 50%; } #gib input[type='checkbox']:checked::after { content: ''; height: 19px; width: 19px; background-color: #4face0; position: absolute; top: -3px; left: -7px; border-radius: 50%; }";
 
@@ -328,108 +470,6 @@ window.gibinit = function() {
   gib.insertStyles(gibStyles);
   document.body.appendChild(wrapper);
 
-  function loadSound() {
-    var request = new XMLHttpRequest();
-    request.open('GET', 'https://flukeout.github.io/simple-sounds/sounds/dead.wav', true);
-    request.responseType = 'arraybuffer';
-    request.onload = function() {
-      window.gibSoundContext.decodeAudioData(request.response, function(nb) {
-        window.gibSoundBuffer = nb;
-        window.gibSoundLoaded = true;
-        console.log('Gib sound effect loaded');
-        window.gibSoundTrigger();
-      });
-    };
-    request.send();
-  }
-
-  function triggerSound() {
-    if (!window.gibSoundLoaded) {
-      console.error('GIB Sound Effect not loaded!');
-      return false;
-    }
-
-    var soundVolume = 1;
-    var source = window.gibSoundContext.createBufferSource();
-    source.buffer = window.gibSoundBuffer;
-    var volume = window.gibSoundContext.createGain();
-    volume.gain.value = soundVolume;
-    volume.connect(window.gibSoundContext.destination);
-    source.connect(volume);
-    source.start(0);
-    return true;
-  }
-
-  function startSoundLoop(override) {
-    if (typeof override == 'undefined') override = false;
-
-    if (!window.gibSoundLoaded && !override) {
-      console.error('GIB Sound Effect not loaded!');
-      return false;
-    }
-
-    var soundVolume = 1;
-    var source = window.gibSoundContext.createBufferSource();
-    source.buffer = window.gibSoundBuffer;
-    var volume = window.gibSoundContext.createGain();
-    volume.gain.value = soundVolume;
-    volume.connect(window.gibSoundContext.destination);
-    source.connect(volume);
-    source.loop = true;
-    source.start(0);
-    window.gibSoundLoopSource = source;
-    return true;
-  }
-
-  function endSoundLoop() {
-    if (!window.gibSoundLoopSource) {
-      console.error('GIB sound has no source');
-      return false;
-    }
-
-    window.gibSoundLoopSource.stop();
-    window.gibSoundLoopSource = null;
-    return true;
-  }
-
-  function startWatcher(GIB, DEBUG_NODE) {
-    if (!GIB.PRODUCT_UPC || GIB.PRODUCT_UPC.length == 0) {
-      DEBUG_NODE.innerText = 'CRITICAL ERROR, CANNOT DETERMINE PRODUCE UPC. WATCHER FAILED.';
-      return false;
-    }
-
-    DEBUG_NODE.innerText = 'Starting Watcher';
-
-    clearInterval(window.gibTimerId);
-    window.gibSettings.enabled = true;
-    window.gibAttemptSecondsLeft = GIB.refreshSeconds;
-
-    window.gibTimerId = setInterval(() => {
-      if (!window.gibSettings.enabled) {
-        console.log('GIB Disabled...');
-        return;
-      }
-
-      window.gibAttemptSecondsLeft--;
-
-      if (window.gibRetryCountdownNow <= 0) {
-        DEBUG_NODE.innerText = 'Attempt# ' + window.gibAttempts + '... Retrying in ' + window.gibAttemptSecondsLeft + ' second(s)...';
-      }
-
-      if (window.gibAttemptSecondsLeft <= 0) {
-        window.gibAttemptSecondsLeft = GIB.refreshSeconds;
-        GIB.addToCart(DEBUG_NODE, GIB.PRODUCT_UPC);
-      }
-    }, 1000);
-  }
-
-  function stopWatcher(DEBUG_NODE) {
-    if (DEBUG_NODE) DEBUG_NODE.innerText = 'Stopping Watcher';
-    window.gibSettings.enabled = false;
-    clearInterval(window.gibTimerId);
-    if (DEBUG_NODE) DEBUG_NODE.innerText = 'Watcher DISABLED';
-  }
-
   loadSound();
   startWatcher(gib, debug);
 
@@ -442,4 +482,11 @@ window.gibinit = function() {
   window.gibSoundTrigger = triggerSound;
   window.gibSoundLoopStart = startSoundLoop;
   window.gibSoundLoopEnd = endSoundLoop;
+
+  window.gibVerifyUser = function() {
+    window.gibVerified = 1;
+    console.log('Verified user');
+    document.getElementById('gib--debug').innerText = 'VERIFIED! Will retry in ' + window.gibRetryCountdownNow + ' minute(s)';
+    removeEventListener('click', window.gibVerifyUser, false);
+  }
 }
