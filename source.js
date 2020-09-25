@@ -53,7 +53,7 @@ window.gibinit = function() {
       setTimeout(function() {
         window.gibSoundLoopEnd();
       }, (10 * 1000));
-      DEBUG_NODE.innerText = "SHADOW BANNED! To prove to GameStop you're real click around on this page before we attempt to try again. Will retry in " + window.gibRetryCountdownNow + 'minute(s)';
+      DEBUG_NODE.innerText = "WARNING! Prove to GameStop you're by clicking around on this page before we attempt to try again. Will retry in " + window.gibRetryCountdownNow + 'minute(s)';
       return;
     }
 
@@ -76,7 +76,7 @@ window.gibinit = function() {
         return false;
       } else if (response.status == 403) {
         window.gibRetryCountdownNow = window.gibRetryCountdownMAX;
-        DEBUG_NODE.innerText = "SHADOW BANNED! To prove to GameStop you're real click around on this page before we attempt to try again. Will retry in " + window.gibRetryCountdownNow + 'minute(s)';
+        DEBUG_NODE.innerText = "WARNING! Prove to GameStop you're by clicking around on this page before we attempt to try again. Will retry in " + window.gibRetryCountdownNow + 'minute(s)';
         window.gibSoundLoopStart(true);
         setTimeout(function() {
           window.gibSoundLoopEnd();
@@ -157,7 +157,7 @@ window.gibinit = function() {
   window.gibSoundLoaded = false;
 
   window.gibAttemptSecondsLeft = 0;
-  window.gibRetryCountdownMAX = 5; // minutes
+  window.gibRetryCountdownMAX = 2; // minutes
   window.gibRetryCountdownNow = 0;
   window.gibRetailer = detectRetailer();
   window.gibAttempts = 0;
@@ -168,11 +168,11 @@ window.gibinit = function() {
   };
 
   var gib = {
-    GIB_VERSION: '2.1.0',
+    GIB_VERSION: '2.0.0',
     PRODUCT_UPC: detectUPC(),
     PRODUCT_TITLE: detectProductName(),
 
-    refreshSeconds: 60,
+    refreshSeconds: 45,
 
     createElement: function(tag, id, styles) {
       var node = document.createElement(tag);
