@@ -1,6 +1,6 @@
 # Class Mod: Order PS5
 
-### Bookmarker Current Version: 2.2.0
+### Bookmarker Current Version: 2.2.X
 **New Version!**
 
 ##### Auto Detection
