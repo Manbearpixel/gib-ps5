@@ -51,88 +51,6 @@ window.gibinit = function() {
     return '';
   }
 
-  window.gibSoundContext      = new AudioContext();
-  window.gibSoundLoopSource   = null;
-  window.gibSoundBuffer       = null;
-  window.gibSoundLoaded       = false;
-
-  window.gibAttemptSecondsLeft  = 0;
-  window.gibRetryCountdownMAX   = 2; // minutes
-  window.gibRetryCountdownNow   = 0;
-
-  window.gibRetailer  = detectRetailer();
-  window.gibAttempts  = 0;
-  window.gibTimerId   = null;
-  window.gibVerified  = -5;
-  window.gibSettings  = {
-    alerts: true,
-    enabled: true
-  };
-
-  var gib = {
-    GIB_VERSION:    '2.2.0',
-    PRODUCT_UPC:    detectUPC(),
-    PRODUCT_TITLE:  detectProductName(),
-
-    refreshSeconds: window.gibRetailer == 'gamestop' ? 60 : 10,
-
-    createElement: function(tag, id, styles) {
-      var node = document.createElement(tag);
-      if (id) node.id = id;
-      if (!styles) return node;
-      for (var style in styles) {
-        node.style[style] = styles[style];
-      }
-      return node;
-    },
-
-    insertStyles: function(styles) {
-      var sheet = document.createElement('style');
-      sheet.type = 'text/css';
-      sheet.innerText = styles;
-      document.head.appendChild(sheet);
-    },
-
-    addToCart: function(DEBUG_NODE, UPC) {
-      if (window.gibRetailer == 'target') {
-        window.gibAddToCartTarget(DEBUG_NODE, UPC);
-      } else if (window.gibRetailer == 'gamestop') {
-        window.gibAddToCartGameStop(DEBUG_NODE, UPC);
-      }
-    },
-
-    createSettings: function(options) {
-      var list = this.createElement('ul', 'gib--settings');
-      for (var id in options) {
-        var option = options[id];
-        var optionWrapper = this.createElement('li', null, {
-          marginBottom: '20px'
-        });
-
-        var toggle = this.createElement('input');
-        toggle.type = 'checkbox';
-        toggle.id = option['id'];
-        toggle.onclick = option['click'];
-        toggle.checked = option['checked'];
-
-        var label = this.createElement('label');
-        label.htmlFor = option['id'];
-
-        var span = this.createElement('span', null, {
-          color: '#fff',
-          paddingLeft: '7px'
-        });
-        span.innerText = option['label'];
-
-        label.appendChild(toggle);
-        label.appendChild(span);
-        optionWrapper.appendChild(label);
-        list.appendChild(optionWrapper);
-      }
-      return list;
-    }
-  };
-
   function target_addToCart(DEBUG_NODE, UPC) {
       var cartUrl = 'https://carts.target.com/web_checkouts/v1/cart_items?field_groups=CART%2CCART_ITEMS%2CSUMMARY&key=feaf228eb2777fd3eee0fd5192ae7107d6224b39';
       var cart = {"cart_type":"REGULAR","channel_id":"10","shopping_context":"DIGITAL","cart_item":{"tcin":UPC,"quantity":1,"item_channel_id":"10"},"fulfillment":{"fulfillment_test_mode":"grocery_opu_team_member_test"}};
@@ -141,19 +59,29 @@ window.gibinit = function() {
 
       fetch(cartUrl, { method: 'POST', mode: 'cors', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cart) })
       .then(function(response) {
-        if (response.status == 200 || response.status == 201) {
+        window.gibAttempts++;
+        if (response.status >= 200 && response.status < 300) {
           return response;
         } else if (response.status == 401) {
-          DEBUG_NODE.innerText = 'CRITICAL ERROR... Refresh this page and reactivate product watcher to continue...';
-          window.gibWatcherDisable(DEBUG_NODE);
-          return false;
-        } else {
-          window.gibAttempts++;
+          return 'AUTH';
+        }
+        return false;
+      }).then(function(response) {
+        if (!response) {
           DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
           return false;
         }
-      }).then(function(response) {
-        if (!response) return;
+
+        if (response == 'AUTH') {
+          DEBUG_NODE.innerText = 'CRITICAL ERROR... Refresh this page and reactivate product watcher to continue...';
+          window.gibWatcherDisable(DEBUG_NODE);
+          window.gibSoundLoopStart(true);
+          setTimeout(function() {
+            window.gibSoundLoopEnd();
+          }, (10 * 1000));
+          return false;
+        }
+
         if (window.gibSettings.alerts) {
           window.gibWatcherDisable();
           DEBUG_NODE.innerText = 'THIS PRODUCT IS IN YOUR CART!! CLICK CONTINUE!!';
@@ -207,6 +135,7 @@ window.gibinit = function() {
       body: cart
     })
     .then(function(response) {
+      window.gibAttempts++;
       if (response.status >= 200 && response.status < 300) {
         return response.json();
       } else if (response.status == 401) {
@@ -218,7 +147,6 @@ window.gibinit = function() {
     })
     .then(function(response) {
       if (!response) {
-        window.gibAttempts++;
         DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
         return false;
       }
@@ -246,7 +174,6 @@ window.gibinit = function() {
       }
 
       if (response.error) {
-        window.gibAttempts++;
         var errorMsg = response.message;
         console.warn('Unable to add... %s', errorMsg);
         DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
@@ -347,22 +274,26 @@ window.gibinit = function() {
     window.gibSettings.enabled = true;
     window.gibAttemptSecondsLeft = GIB.refreshSeconds;
 
-    window.gibTimerId = setInterval(() => {
-      if (!window.gibSettings.enabled) {
-        console.log('GIB Disabled...');
-        return;
-      }
+    setTimeout(function() {
+      GIB.addToCart(DEBUG_NODE, GIB.PRODUCT_UPC);
 
-      window.gibAttemptSecondsLeft--;
+      window.gibTimerId = setInterval(function() {
+        if (!window.gibSettings.enabled) {
+          console.log('GIB Disabled...');
+          return;
+        }
 
-      if (window.gibRetryCountdownNow <= 0) {
-        DEBUG_NODE.innerText = 'Attempt#' + window.gibAttempts + '... Retrying in ' + window.gibAttemptSecondsLeft + ' second(s)...';
-      }
+        window.gibAttemptSecondsLeft--;
 
-      if (window.gibAttemptSecondsLeft <= 0) {
-        window.gibAttemptSecondsLeft = GIB.refreshSeconds;
-        GIB.addToCart(DEBUG_NODE, GIB.PRODUCT_UPC);
-      }
+        if (window.gibRetryCountdownNow <= 0) {
+          DEBUG_NODE.innerText = 'Attempt#' + window.gibAttempts + '... Retrying in ' + window.gibAttemptSecondsLeft + ' second(s)...';
+        }
+
+        if (window.gibAttemptSecondsLeft <= 0) {
+          window.gibAttemptSecondsLeft = GIB.refreshSeconds;
+          GIB.addToCart(DEBUG_NODE, GIB.PRODUCT_UPC);
+        }
+      }, 1000);
     }, 1000);
   }
 
@@ -372,6 +303,88 @@ window.gibinit = function() {
     clearInterval(window.gibTimerId);
     if (DEBUG_NODE) DEBUG_NODE.innerText = 'Watcher DISABLED';
   }
+
+  window.gibSoundContext      = new AudioContext();
+  window.gibSoundLoopSource   = null;
+  window.gibSoundBuffer       = null;
+  window.gibSoundLoaded       = false;
+
+  window.gibAttemptSecondsLeft  = 0;
+  window.gibRetryCountdownMAX   = 2; // minutes
+  window.gibRetryCountdownNow   = 0;
+
+  window.gibRetailer  = detectRetailer();
+  window.gibAttempts  = 0;
+  window.gibTimerId   = null;
+  window.gibVerified  = -5;
+  window.gibSettings  = {
+    alerts: true,
+    enabled: true
+  };
+
+  var gib = {
+    GIB_VERSION:    '2.2.3',
+    PRODUCT_UPC:    detectUPC(),
+    PRODUCT_TITLE:  detectProductName(),
+
+    refreshSeconds: window.gibRetailer == 'gamestop' ? 60 : 10,
+
+    createElement: function(tag, id, styles) {
+      var node = document.createElement(tag);
+      if (id) node.id = id;
+      if (!styles) return node;
+      for (var style in styles) {
+        node.style[style] = styles[style];
+      }
+      return node;
+    },
+
+    insertStyles: function(styles) {
+      var sheet = document.createElement('style');
+      sheet.type = 'text/css';
+      sheet.innerText = styles;
+      document.head.appendChild(sheet);
+    },
+
+    addToCart: function(DEBUG_NODE, UPC) {
+      if (window.gibRetailer == 'target') {
+        window.gibAddToCartTarget(DEBUG_NODE, UPC);
+      } else if (window.gibRetailer == 'gamestop') {
+        window.gibAddToCartGameStop(DEBUG_NODE, UPC);
+      }
+    },
+
+    createSettings: function(options) {
+      var list = this.createElement('ul', 'gib--settings');
+      for (var id in options) {
+        var option = options[id];
+        var optionWrapper = this.createElement('li', null, {
+          marginBottom: '20px'
+        });
+
+        var toggle = this.createElement('input');
+        toggle.type = 'checkbox';
+        toggle.id = option['id'];
+        toggle.onclick = option['click'];
+        toggle.checked = option['checked'];
+
+        var label = this.createElement('label');
+        label.htmlFor = option['id'];
+
+        var span = this.createElement('span', null, {
+          color: '#fff',
+          paddingLeft: '7px'
+        });
+        span.innerText = option['label'];
+
+        label.appendChild(toggle);
+        label.appendChild(span);
+        optionWrapper.appendChild(label);
+        list.appendChild(optionWrapper);
+      }
+      return list;
+    }
+  };
 
   var gibStyles = "#gib input[type='checkbox'] { cursor: pointer; position: relative; } #gib input[type='checkbox']::before { content: ''; height: 25px; width: 25px; background-color: #fff; left: -10px; top: -6px; position: absolute; border-radius: 50%; } #gib input[type='checkbox']:checked::after { content: ''; height: 19px; width: 19px; background-color: #4face0; position: absolute; top: -3px; left: -7px; border-radius: 50%; }";
 
