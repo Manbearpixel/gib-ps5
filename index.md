@@ -4,7 +4,7 @@
 **New Version!**
 
 ##### Auto Detection
-Detects current product page you're on at Target.com and will configure itself to MONITOR that specific product! You can use this with PS5 Physical, Digital, Accessories, and Games! You can even monitor the pre-order for new toasters. If it can't detect the product page you're on it will let you know.
+Detects current product page you're on and will configure itself to MONITOR that specific product! You can use this with PS5 Physical, Digital, Accessories, and Games! You can even monitor the pre-order for new toasters. If it can't detect the product page you're on it will let you know.
 
 ##### Sound Alerts!
 You can now enable alerts! If the product is added to your cart it will loop a sound effect to get your attention instead of redirecting you to your target cart. You'll need to manually click "Continue" to head to the checkout process. If alerts are disabled, it will just redirect you to your cart. We can't have both worlds because the script is lost during a redirect.
