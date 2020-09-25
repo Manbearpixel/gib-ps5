@@ -69,6 +69,7 @@ window.gibinit = function() {
         }
         return false;
       }).then(function(response) {
+        console.log(response);
         if (!response) {
           DEBUG_NODE.innerText = 'Status: FAILED... Attempt #' + window.gibAttempts;
           return false;
@@ -91,6 +92,7 @@ window.gibinit = function() {
           document.getElementById('gib--settings').style.display = 'none';
           window.gibSoundLoopStart();
         } else {
+          window.gibSoundTrigger();
           window.gibWatcherDisable(DEBUG_NODE);
           window.location.replace('https://www.target.com/co-review');
         }
@@ -336,7 +338,7 @@ window.gibinit = function() {
   };
 
   var gib = {
-    GIB_VERSION:    '2.2.3',
+    GIB_VERSION:    '2.2.4',
     PRODUCT_UPC:    detectUPC(),
     PRODUCT_TITLE:  detectProductName(),
 
@@ -455,7 +457,8 @@ window.gibinit = function() {
   var debug = gib.createElement('div', 'gib--debug', {
     fontSize: '20px',
     color: '#fff',
-    marginBottom: '30px'
+    marginBottom: '30px',
+    lineHeight: '1.1em'
   });
   debug.innerText = 'Setting up DISC Watcher';
   wrapper.appendChild(debug);
