@@ -8,6 +8,8 @@ window.gibinit = function() {
     var host = location.host || location.hostname;
     if (!!host.match(/gamestop/ig)) return 'gamestop';
     if (!!host.match(/target/ig)) return 'target';
+    if (!!host.match(/bestbuy/ig)) return 'bestbuy';
+    if (!!host.match(/amazon/ig)) return 'amazon';
   }
 
   function gamestopProductMeta() {
@@ -258,6 +260,16 @@ window.gibinit = function() {
   }
 
   function startWatcher(GIB, DEBUG_NODE) {
+    if (!window.gibSupportedSites.includes(window.gibRetailer)) {
+      DEBUG_NODE.innerText = 'Retailer not supported! This tool does not currently support ' + window.gibRetailer + '. Follow @pixxlated for the latest supported retailers.';
+      window.gibWatcherDisable();
+      window.gibSoundLoopStart(true);
+      setTimeout(function() {
+        window.gibSoundLoopEnd();
+      }, (10 * 1000));
+      return false;
+    }
+
     if (!GIB.PRODUCT_UPC || GIB.PRODUCT_UPC.length == 0) {
       DEBUG_NODE.innerText = 'CRITICAL ERROR, CANNOT DETERMINE PRODUCE UPC. WATCHER FAILED.';
       window.gibWatcherDisable();
@@ -304,6 +316,7 @@ window.gibinit = function() {
     if (DEBUG_NODE) DEBUG_NODE.innerText = 'Watcher DISABLED';
   }
 
+  window.gibSupportedSites    = ['target', 'gamestop'];
   window.gibSoundContext      = new AudioContext();
   window.gibSoundLoopSource   = null;
   window.gibSoundBuffer       = null;
