@@ -338,7 +338,7 @@ window.gibinit = function() {
   };
 
   var gib = {
-    GIB_VERSION:    '2.2.4',
+    GIB_VERSION:    '2.2.5',
     PRODUCT_UPC:    detectUPC(),
     PRODUCT_TITLE:  detectProductName(),
 
@@ -515,6 +515,7 @@ window.gibinit = function() {
   window.gibVerifyUser = function() {
     window.gibVerified++;
     console.log('Verified user %i', window.gibVerified);
+    window.gibSoundLoopEnd();
     if (window.gibVerified < 0) {
       document.getElementById('gib--debug').innerText = 'ALMOST VERIFIED! Click this page a few more times! Will retry in ' + window.gibRetryCountdownNow + ' minute(s)';
       return;
