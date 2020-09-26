@@ -73,7 +73,7 @@ window.gibinit = function() {
 
       if (response == 'AUTH') {
         DEBUG_NODE.innerText = 'CRITICAL ERROR... Refresh this page and reactivate product watcher to continue...';
-        window.gibWatcherDisable(DEBUG_NODE);
+        window.gibWatcherDisable();
         window.gibSoundTrigger(4, true);
         return false;
       }
@@ -86,7 +86,7 @@ window.gibinit = function() {
         window.gibSoundTrigger(-1);
       } else {
         window.gibSoundTrigger(0, true);
-        window.gibWatcherDisable(DEBUG_NODE);
+        window.gibWatcherDisable();
         window.location.replace('https://www.target.com/co-review');
       }
     });
@@ -303,7 +303,7 @@ window.gibinit = function() {
   };
 
   var gib = {
-    GIB_VERSION:    '2.2.6',
+    GIB_VERSION:    '2.2.7',
     PRODUCT_UPC:    detectUPC(),
     PRODUCT_TITLE:  detectProductName(),
 
